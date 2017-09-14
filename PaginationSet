@@ -1,0 +1,131 @@
+   /// <summary>
+    /// The navigate paging info.
+    /// </summary>
+    public struct NavigationPagingInfo
+    {
+        /// <summary>
+        /// Gets or sets index of the First Record.
+        /// </summary>
+        public int First { get; set; }
+
+        /// <summary>
+        /// Gets or sets Count.
+        /// </summary>
+        public int Count { get; set; }
+
+        /// <summary>
+        /// Gets or sets Total Records.
+        /// </summary>
+        public int Totals { get; set; }
+
+        /// <summary>
+        /// Gets or sets Count.
+        /// </summary>
+        public string SortingPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets Count.
+        /// </summary>
+        public bool IsAscending { get; set; }
+
+        private Guid UniqueId { get; set; }
+
+        /// <summary>
+        /// The op_ implicit.
+        /// </summary>
+        /// <param name="navigationPagingInfo">
+        /// The navigation paging info.
+        /// </param>
+        /// <returns>
+        /// The PagingInfoDto instance
+        /// </returns>
+        public static implicit operator PagingInfo(NavigationPagingInfo navigationPagingInfo)
+        {
+            return new PagingInfo
+                       {                           
+                           Count = navigationPagingInfo.Count,
+                           First = navigationPagingInfo.First,
+                           Total = navigationPagingInfo.Totals,
+                           SortingPath = navigationPagingInfo.SortingPath,
+                           IsAscending = navigationPagingInfo.IsAscending,                           
+                       };
+        }
+
+        /// <summary>
+        /// The op_ implicit.
+        /// </summary>
+        /// <param name="pagingInfo">
+        /// The paging info.
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static implicit operator NavigationPagingInfo(PagingInfo pagingInfo)
+        {
+            return new NavigationPagingInfo
+                       {
+                           Count = pagingInfo.Count,
+                           First = pagingInfo.First,
+                           Totals = pagingInfo.Total,
+                           SortingPath = pagingInfo.SortingPath,
+                           IsAscending = pagingInfo.IsAscending,
+                           UniqueId = Guid.NewGuid()
+                       };
+        }
+
+        /// <summary>
+        /// Gets Pages.
+        /// </summary>
+        public int Pages
+        {
+            get
+            {
+                if (this.Count <= 0)
+                {
+                    return 0;     
+                }
+
+                var pages = this.Totals/this.Count;
+                var temp = this.Totals%this.Count;
+                if (temp > 0)
+                {
+                    pages++;
+                }
+
+                return pages;
+            }
+        }       
+    }
+ -----------------------------------------------------
+ 
+   private const int DefaultPage = 1;
+   private const bool IsAscending = false;
+   private const int RowPerPage = 10;
+   private int currentPage = DefaultPage;
+ // get index and build PagingInfo
+             var pagingInf = new PagingInfo()
+             {
+                 First = (this.currentPage - 1) * RowPerPage,
+                 Count = RowPerPage
+             };                 
+ ------------------------------------------------------
+                 
+                 pagingInf.Total = result.TotalRowCanGet;
+                 var alamrs = result.AlarmEventHistoryInfos.Skip(pagingInf.First).Take(pagingInf.Count);
+                 if (pagingInf.Total > 0)
+                 {
+                     var temp = pagingInf.First + pagingInf.Count;
+                     if (temp > pagingInf.Total)
+                     {
+                         var page = (pagingInf.Total / pagingInf.Count);
+                         if (pagingInf.Total % pagingInf.Count != 0)
+                         {
+                             page++;
+
+                         }
+                         pagingInf.First = pagingInf.Count * (page - 1);
+                         alamrs = result.AlarmEventHistoryInfos.Skip(pagingInf.First).Take(pagingInf.Count);
+                     }
+                 }
+                 var history = alamrs.Select(x => x.ToAlarmHistory());
+                 history=history.OrderBy(x => x, this.comparer);
+                 reuturn this.HistoryAlarmList = new BindableCollection<AlarmHistory>(history);

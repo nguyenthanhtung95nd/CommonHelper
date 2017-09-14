@@ -1,3 +1,69 @@
+ 
+  public enum TypeConfig
+    {
+        Design,
+        Requirement,
+        ModelTable,
+        SubSystem,
+        Mapping,
+        SystemConfig,
+        DataType
+    }
+    public class ReadFile<T> where T : class
+    {
+        public static List<T> ProcessDirectory(string targetDirectory, TypeConfig type = TypeConfig.Design)
+        {
+            var result = new List<T>();
+            // Process the list of files found in the directory.
+            string[] fileEntries = Directory.GetFiles(targetDirectory);
+            foreach (string fileName in fileEntries)
+            {
+                var temp = ProcessFile(fileName, type);
+                if (temp != null)
+                {
+                    result.Add(temp);
+                }
+            }
+
+            // Recurse into subdirectories of this directory.
+            string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+            foreach (string subdirectory in subdirectoryEntries)
+                result.AddRange(ProcessDirectory(subdirectory, type));
+            return result;
+        }
+         public static T ProcessFile(string path, TypeConfig type = TypeConfig.Design)
+        {
+            if (type == TypeConfig.Design)
+            {
+                if (path.Contains("Design.json"))
+                {
+                    using (StreamReader file = new StreamReader(path))
+                    {
+                        return JsonConvert.DeserializeObject<T>(file.ReadToEnd());
+                    }
+                }
+            }
+          }
+        }
+        
+           public static List<string> ReadSource(string targetDirectory)
+        {
+            var result = new List<string>();
+            string[] fileEntries = Directory.GetFiles(targetDirectory);
+            foreach (string fileName in fileEntries)
+            {
+                if (!fileName.Contains("json"))
+                {
+                    result.Add(fileName);
+                }
+            }
+            string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+            foreach (string subdirectory in subdirectoryEntries)
+                result.AddRange(ReadSource(subdirectory));
+            return result;
+        }
+ 
+ -----------------------------------
  /// <summary>
         /// Convert <see cref="DataTable"/> to csv string with specific delimiter
         /// </summary>

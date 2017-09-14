@@ -1,0 +1,90 @@
+ /// <summary>
+        /// Convert <see cref="DataTable"/> to csv string with specific delimiter
+        /// </summary>
+        /// <param name="datatable"></param>
+        /// <param name="seperator"></param>
+        /// <returns></returns>
+        public static string ToCsv(this DataTable datatable, char seperator)
+        {
+            StringBuilder sb = new StringBuilder();
+            int cols = datatable.Columns.Count;
+            for (int i = 0; i < cols; i++)
+            {
+                sb.Append(datatable.Columns[i]);
+                if (i < cols - 1)
+                    sb.Append(seperator);
+            }
+            sb.AppendLine();
+            foreach (DataRow dr in datatable.Rows)
+            {
+                for (int i = 0; i < cols; i++)
+                {
+                    sb.Append(dr[i].ToString());
+
+                    if (i < cols - 1)
+                        sb.Append(seperator);
+                }
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Write <see cref="DataTable"/> data to csv file.
+        /// </summary>
+        /// <param name="sourceTable"></param>
+        /// <param name="writer"></param>
+        /// <param name="includeHeaders"></param>
+        public static void WriteDataTable(DataTable sourceTable, TextWriter writer, bool includeHeaders)
+        {
+            if (includeHeaders)
+            {
+                IEnumerable<string> headerValues = sourceTable.Columns
+                    .OfType<DataColumn>()
+                    .Select(column => column.ColumnName);
+
+                writer.WriteLine(string.Join("\t", headerValues));
+            }
+
+            IEnumerable<string> items = null;
+
+            foreach (DataRow row in sourceTable.Rows)
+            {
+                items = row.ItemArray.Select(o => o.ToString());
+                writer.WriteLine(string.Join("\t", items));
+            }
+
+            writer.Flush();
+        }
+       public static DataTable ReadCsvFile(string filePath, bool firstRowHeader = true, char delimiter = '\t')
+        {
+            using (var stream = new StreamReader(filePath, Encoding.UTF8))
+            {
+                DataTable result = new DataTable();
+                var firstRow = stream.ReadLine();
+                var cols = firstRow.Split(delimiter);
+                if (firstRowHeader)
+                {
+                    foreach (var col in cols)
+                    {
+                        result.Columns.Add(col);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < cols.Length; i++)
+                    {
+                        result.Columns.Add("Column" + (i + 1));
+                    }
+                    result.Rows.Add(cols);
+                }
+                string row = string.Empty;
+                while (!string.IsNullOrEmpty((row = stream.ReadLine())))
+                {
+                    cols = row.Split(delimiter);
+                    result.Rows.Add(cols);
+                }
+                return result;
+
+            }
+        }
